@@ -1,7 +1,7 @@
 package com.ljheee.paint.shape;
 
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 public abstract class Shape {
 
@@ -23,6 +23,6 @@ public abstract class Shape {
 	/**
 	 * 父类画图的方法
 	 */
-	public  void draw(Graphics g){};
+	public  void draw(Graphics2D g){};
 	
 }

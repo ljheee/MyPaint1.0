@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Polygon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -18,7 +19,10 @@ import javax.swing.*;
 
 import com.ljheee.paint.component.DrawPanel;
 import com.ljheee.paint.shape.Line;
+import com.ljheee.paint.shape.MyPolygon;
+import com.ljheee.paint.shape.Oval;
 import com.ljheee.paint.shape.Rectangle;
+import com.ljheee.paint.shape.RoundRect;
 import com.ljheee.paint.shape.Shape;
 import com.ljheee.paint.shape.ShapeList;
 import com.ljheee.paint.ui.about.About;
@@ -45,7 +49,7 @@ public class MainUI extends JFrame {
 	
 	JPanel drawPanel = null;
 	
-	Graphics g = null;
+	Graphics2D g = null;
 	int x0=0,y0=0,xEnd=0,yEnd=0;
 	int xPX = 0,yPX = 0;
 	String commandTool = "";
@@ -59,7 +63,7 @@ public class MainUI extends JFrame {
 		this.setSize(900, 700);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
-		g = this.getGraphics();
+		g = (Graphics2D) this.getGraphics();
 
 		JPanel topJPanel = new JPanel();
 		topJPanel.setLayout(new GridLayout(2, 1));
@@ -289,24 +293,37 @@ public class MainUI extends JFrame {
 
 			switch (commandTool) {
 			case "line":	//直线   
-				shape = new Line(x0, y0, xEnd, yEnd, commandColor);
 	 	 		shape.draw(g);
-	 	 		repaint();
+//	 	 		repaint();
 	 	 		shapelist.addShape(shape);
 				break;
 			
 			case "rect":	   
-				shape = new Rectangle(x0, y0, xEnd, yEnd, commandColor);
 				shape.draw(g);
 				repaint();
 				shapelist.addShape(shape);
 				break;
+				
+			case "round_rect":	   
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				break;
+			case "oval":	   
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				break;
+				
+			case "polygon":	   
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				break;
+				
 			case "color_picker":	// 
 				
 				return;
-
-			default:
-				break;
 			}
 			
 		}
@@ -325,6 +342,53 @@ public class MainUI extends JFrame {
 			
 			xEnd = e.getX();
 			yEnd = e.getY();
+			
+			
+			g = (Graphics2D)drawPanel.getGraphics();
+
+			switch (commandTool) {
+			case "line":	//直线   
+				shape = new Line(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
+			
+			case "rect":	//矩形   
+				shape = new Rectangle(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
+				
+			case "round_rect":	//圆角矩形   
+				shape = new RoundRect(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
+				
+			case "oval":	//椭圆   
+				shape = new Oval(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
+				
+			case "polygon":	//多边形   
+				shape = new MyPolygon(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
+				
+				
+				
+			case "color_picker":// 颜色选择器
+				
+				return;
+
+				
+			default:
+				break;
+			}
+			
+			
 			
 			
 			xPX = e.getX();

@@ -1,7 +1,7 @@
 package com.ljheee.paint.shape;
 
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 public class Line extends Shape {
 
@@ -10,7 +10,7 @@ public class Line extends Shape {
 	}
 
 	@Override
-	public void draw(Graphics g) {
+	public void draw(Graphics2D g) {
 		g.setColor(color);
 		g.drawLine(x1, y1, x2, y2);
 	}
