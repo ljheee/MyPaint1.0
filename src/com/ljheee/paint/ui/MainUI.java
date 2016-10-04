@@ -1,5 +1,6 @@
 package com.ljheee.paint.ui;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -8,19 +9,27 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Polygon;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
+
 import javax.swing.*;
 
 import com.ljheee.paint.component.DrawPanel;
+import com.ljheee.paint.shape.AirBrush;
+import com.ljheee.paint.shape.DottedRectangle;
+import com.ljheee.paint.shape.Eraser;
 import com.ljheee.paint.shape.Line;
 import com.ljheee.paint.shape.MyPolygon;
 import com.ljheee.paint.shape.Oval;
+import com.ljheee.paint.shape.Pencil;
 import com.ljheee.paint.shape.Rectangle;
 import com.ljheee.paint.shape.RoundRect;
 import com.ljheee.paint.shape.Shape;
@@ -52,11 +61,15 @@ public class MainUI extends JFrame {
 	Graphics2D g = null;
 	int x0=0,y0=0,xEnd=0,yEnd=0;
 	int xPX = 0,yPX = 0;
-	String commandTool = "";
-	Color commandColor = null;
+	String commandTool = "pencil";
+	Color commandColor = Color.black;
 	
 	ShapeList shapelist = new ShapeList();
 	Shape shape = null;
+	
+	BufferedImage[] bufferedImages = new BufferedImage[50];
+	int count = 0;
+	BufferedImage bufImg;//用于记录最新操作生成的画面
 	
 	public MainUI() {
 		super();
@@ -220,6 +233,7 @@ public class MainUI extends JFrame {
 
 		// center--drawingPanel
 		drawPanel = new DrawPanel(shapelist);
+		bufImg = (BufferedImage) drawPanel.createImage(drawPanel.getWidth(), drawPanel.getHeight());
     	
 		drawPanel.addMouseListener(new MouseListenerImpl());
 		drawPanel.addMouseMotionListener(new MouseMotionImpl());
@@ -291,6 +305,16 @@ public class MainUI extends JFrame {
 			
 			g = (Graphics2D)drawPanel.getGraphics();
 
+			if(commandTool.equals("air_brush")){
+				AirBrush airBrush = new AirBrush(x0, y0, xEnd, yEnd, commandColor);
+				shape = airBrush;
+				airBrush.flag = 1;
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				return;
+			}
+			
 			switch (commandTool) {
 			case "line":	//直线   
 	 	 		shape.draw(g);
@@ -309,7 +333,17 @@ public class MainUI extends JFrame {
 				repaint();
 				shapelist.addShape(shape);
 				break;
+			case "dot_rect":	   
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				break;
 			case "oval":	   
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				break;
+			case "pencil":	   
 				shape.draw(g);
 				repaint();
 				shapelist.addShape(shape);
@@ -321,9 +355,6 @@ public class MainUI extends JFrame {
 				shapelist.addShape(shape);
 				break;
 				
-			case "color_picker":	// 
-				
-				return;
 			}
 			
 		}
@@ -343,10 +374,29 @@ public class MainUI extends JFrame {
 			xEnd = e.getX();
 			yEnd = e.getY();
 			
-			
 			g = (Graphics2D)drawPanel.getGraphics();
-
+			
+			//铅笔或橡皮擦
+			if(commandTool.equals("pencil")||commandTool.equals("eraser")){
+				xEnd = e.getX();
+				yEnd = e.getY();
+				shape = new Pencil(x0, y0, xEnd, yEnd, commandColor);
+				if(commandTool.equals("eraser")){
+					shape = new Eraser(x0, y0, xEnd, yEnd, Color.white);
+				}
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+				
+				//交换坐标
+				x0 = xEnd;
+				y0 = yEnd;
+			}
+			
+			
+				
 			switch (commandTool) {
+				
 			case "line":	//直线   
 				shape = new Line(x0, y0, xEnd, yEnd, commandColor);
 				shape.draw(g);
@@ -364,6 +414,11 @@ public class MainUI extends JFrame {
 				shape.draw(g);
 				repaint();
 				break;
+			case "dot_rect":	//虚边矩形   
+				shape = new DottedRectangle(x0, y0, xEnd, yEnd, commandColor);
+				shape.draw(g);
+				repaint();
+				break;
 				
 			case "oval":	//椭圆   
 				shape = new Oval(x0, y0, xEnd, yEnd, commandColor);
@@ -378,11 +433,6 @@ public class MainUI extends JFrame {
 				break;
 				
 				
-				
-			case "color_picker":// 颜色选择器
-				
-				return;
-
 				
 			default:
 				break;
