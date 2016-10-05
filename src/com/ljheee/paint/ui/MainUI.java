@@ -1,15 +1,11 @@
 package com.ljheee.paint.ui;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Polygon;
-import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -18,12 +14,12 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 
 import javax.swing.*;
 
 import com.ljheee.paint.component.DrawPanel;
 import com.ljheee.paint.shape.AirBrush;
+import com.ljheee.paint.shape.Curve;
 import com.ljheee.paint.shape.DottedRectangle;
 import com.ljheee.paint.shape.Eraser;
 import com.ljheee.paint.shape.Line;
@@ -34,6 +30,7 @@ import com.ljheee.paint.shape.Rectangle;
 import com.ljheee.paint.shape.RoundRect;
 import com.ljheee.paint.shape.Shape;
 import com.ljheee.paint.shape.ShapeList;
+import com.ljheee.paint.shape.Word;
 import com.ljheee.paint.ui.about.About;
 
 
@@ -67,9 +64,12 @@ public class MainUI extends JFrame {
 	ShapeList shapelist = new ShapeList();
 	Shape shape = null;
 	
-	BufferedImage[] bufferedImages = new BufferedImage[50];
-	int count = 0;
-	BufferedImage bufImg;//用于记录最新操作生成的画面
+	MyPolygon myPolygon = null;
+	Curve  curve = null;
+	
+	int step = 0;
+	int curveX0,curveY0,curveXEnd,curveYEnd;
+	int cx1,cy1,cx2,cy2;
 	
 	public MainUI() {
 		super();
@@ -160,6 +160,19 @@ public class MainUI extends JFrame {
 						return;
 					}
 					commandTool = e.getActionCommand();
+					if(commandTool.equals("word")){//提示文字输入
+						JOptionPane.showMessageDialog(drawPanel, "Please hit the drawing pad to choose the word input position",
+								"Hint", JOptionPane.INFORMATION_MESSAGE);
+						return;
+					}
+					if(commandTool.equals("polygon")){
+						myPolygon = null;//点击“多边形”命令时，重新创建一个新的多边形
+						return;
+					}
+					if(commandTool.equals("curve")){
+						curve = null;//点击“多边形”命令时，重新创建一个新的多边形
+						return;
+					}
 				}
 			});
 			
@@ -233,7 +246,6 @@ public class MainUI extends JFrame {
 
 		// center--drawingPanel
 		drawPanel = new DrawPanel(shapelist);
-		bufImg = (BufferedImage) drawPanel.createImage(drawPanel.getWidth(), drawPanel.getHeight());
     	
 		drawPanel.addMouseListener(new MouseListenerImpl());
 		drawPanel.addMouseMotionListener(new MouseMotionImpl());
@@ -271,7 +283,7 @@ public class MainUI extends JFrame {
 	}
 	
 	/**
-	 * 鼠标
+	 * 鼠标监听
 	 * @author ljheee
 	 *
 	 */
@@ -296,6 +308,30 @@ public class MainUI extends JFrame {
 		public void mousePressed(MouseEvent e) {
 			x0 = e.getX();
 			y0 = e.getY();
+			
+			g = (Graphics2D)drawPanel.getGraphics();
+			
+			if(commandTool.equals("word")){//文字
+				String input;
+				input = JOptionPane.showInputDialog("Please input the text you want!");
+				Word word = new Word(x0, y0, xEnd, yEnd, commandColor);
+				word.text = input;
+				shape = word;
+				shape.draw(g);
+				repaint();
+				shapelist.addShape(shape);
+			}
+			
+			if(commandTool.equals("curve")){//曲线
+
+				if(step == 0||step == -1||curve==null){
+					step = 1;//进入第一步：拉出直线
+					curveX0 = e.getX();
+					curveY0 = e.getY();
+				} 
+			}
+			
+			
 		}
 
 		@Override
@@ -305,7 +341,7 @@ public class MainUI extends JFrame {
 			
 			g = (Graphics2D)drawPanel.getGraphics();
 
-			if(commandTool.equals("air_brush")){
+			if(commandTool.equals("air_brush")){//油漆桶
 				AirBrush airBrush = new AirBrush(x0, y0, xEnd, yEnd, commandColor);
 				shape = airBrush;
 				airBrush.flag = 1;
@@ -314,6 +350,53 @@ public class MainUI extends JFrame {
 				shapelist.addShape(shape);
 				return;
 			}
+			
+			
+			if(commandTool.equals("polygon")){//多边形
+				if(myPolygon == null){
+					myPolygon = new MyPolygon(x0, y0, xEnd, yEnd, commandColor);
+				}
+				
+				myPolygon.npoints++;
+				myPolygon.xpoints[myPolygon.npoints-1] = xEnd;
+				myPolygon.ypoints[myPolygon.npoints-1] = yEnd;
+				
+				shape = myPolygon;
+			}
+			
+			
+			
+			if(commandTool.equals("curve")){//曲线
+				
+				if(step == 1){
+					curveXEnd = e.getX();
+					curveYEnd = e.getY();
+					step = 2;//第一次鼠标释放：直线完成。第二步：确定ctrlPoint1
+					return;
+				} else if(step == 2){
+					cx1 = e.getX();
+					cy1 = e.getY();
+//					curve.cubicCurve2D.ctrlx1 = e.getX();
+//					curve.cubicCurve2D.ctrly1 = e.getY();
+					step = 3;//第三步：确定ctrlPoint2
+					return;
+				} else if(step == 3){
+//					curve.cubicCurve2D.ctrlx2 = e.getX();
+//					curve.cubicCurve2D.ctrly2 = e.getY();
+					cx2 = e.getX();
+					cy2 = e.getY();
+					curve.cubicCurve2D.setCurve(curveX0, curveY0, cx1, cy1, cx2, cy2, curveXEnd, curveYEnd);
+					shape.draw(g);
+					repaint();
+					shapelist.addShape(shape);
+					step = -1;
+					curve = null;
+					return;
+				}
+				
+				
+			}
+			
 			
 			switch (commandTool) {
 			case "line":	//直线   
@@ -356,9 +439,7 @@ public class MainUI extends JFrame {
 				break;
 				
 			}
-			
 		}
-		
 	}
 	
 	/**
@@ -425,13 +506,20 @@ public class MainUI extends JFrame {
 				shape.draw(g);
 				repaint();
 				break;
+			case "curve":	//贝斯曲线   
+				if(step == 1&&curve==null){
+					curve = new Curve(curveX0, curveY0, xEnd, yEnd, commandColor);
+					curve.cubicCurve2D.setCurve(curveX0, curveY0, curveX0, curveY0, xEnd, yEnd, xEnd, yEnd);
+				} else if(step == 2){
+					curve.cubicCurve2D.setCurve(curveX0, curveY0, xEnd, yEnd, xEnd, yEnd, curveXEnd, curveYEnd);
+				} else if(step == 3){
+					curve.cubicCurve2D.setCurve(curveX0, curveY0, cx1, cy1, xEnd, yEnd, curveXEnd, curveYEnd);
+				}
 				
-			case "polygon":	//多边形   
-				shape = new MyPolygon(x0, y0, xEnd, yEnd, commandColor);
+				shape = curve;	
 				shape.draw(g);
 				repaint();
 				break;
-				
 				
 				
 			default:
