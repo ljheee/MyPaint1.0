@@ -43,9 +43,11 @@ public class MainUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	JMenuItem newProc, localTaskmgr, exitH, refreshNow, maxLarge, minLarge, aboutItem;
+	private JMenuItem newFile,openFile,saveFile, exitH,aboutItem;
+	private JMenuItem undoItem,copyItem,cutItem, pasteItem;
 
 	private ButtonGroup buttongroup = new ButtonGroup();
+	
 	// 当按下其中一按钮时，当前按钮呈现下陷状态，剩下所有按钮是弹起状态
 	private JToggleButton toolBtns[] = new JToggleButton[16];
 
@@ -53,23 +55,25 @@ public class MainUI extends JFrame {
 	private JLabel pathInfo = new JLabel("  ");
 	private JLabel timeInfo = new JLabel("  ");
 	
-	JPanel drawPanel = null;
+	private JPanel drawPanel = null;//中间的画板
 	
 	Graphics2D g = null;
 	int x0=0,y0=0,xEnd=0,yEnd=0;
 	int xPX = 0,yPX = 0;
-	String commandTool = "pencil";
-	Color commandColor = Color.black;
+	String commandTool = "pencil";//选择的“工具指令”
+	Color commandColor = Color.black;//当前颜色
 	
 	ShapeList shapelist = new ShapeList();
-	Shape shape = null;
+	Shape shape = null;//当前操作[创建]的图形
 	
-	MyPolygon myPolygon = null;
-	Curve  curve = null;
+	MyPolygon myPolygon = null;//多边形
+	Curve  curve = null;//曲线
 	
 	int step = 0;
 	int curveX0,curveY0,curveXEnd,curveYEnd;
 	int cx1,cy1,cx2,cy2;
+	
+	MenuHandler menuHandler = new MenuHandler();
 	
 	public MainUI() {
 		super();
@@ -86,8 +90,8 @@ public class MainUI extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 
 		JMenu fileMenu = new JMenu("文件(F)");
-		JMenu editMenu = new JMenu("主页(O)");
-		JMenu viewMenu = new JMenu("查看(V)");
+		JMenu editMenu = new JMenu("编辑(E)");
+		JMenu viewMenu = new JMenu("视图(V)");
 		JMenu helpMenu = new JMenu("帮助(H)");
 
 		rootPane.setJMenuBar(menuBar);
@@ -96,21 +100,33 @@ public class MainUI extends JFrame {
 		menuBar.add(viewMenu);
 		menuBar.add(helpMenu);
 
-		newProc = new JMenuItem("新建");
+		newFile = new JMenuItem("新建");// 文件菜单 项
+		openFile = new JMenuItem("打开");
+		saveFile = new JMenuItem("保存");
 		exitH = new JMenuItem("退出");
+		
+		fileMenu.add(newFile);// 文件菜单 --添加菜单项
+		fileMenu.add(openFile);
+		fileMenu.add(saveFile);
+		fileMenu.add(exitH);
+		
+		
+		undoItem = new JMenuItem("撤销");//编辑-菜单
+		copyItem = new JMenuItem("复制");
+		cutItem = new JMenuItem("剪切");
+		pasteItem = new JMenuItem("粘贴");
+		
+		editMenu.add(undoItem);
+		editMenu.add(copyItem);
+		editMenu.add(cutItem);
+		editMenu.add(pasteItem);
+		
 
 		aboutItem = new JMenuItem("关于");
-		aboutItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new About(MainUI.this,"关于",true);
-			}
-		});
+		aboutItem.addActionListener(menuHandler);
 		helpMenu.add(aboutItem);
 
-		// 文件菜单 --添加菜单项
-		fileMenu.add(newProc);
-		fileMenu.add(exitH);
+		
 
 		
 		
@@ -281,6 +297,41 @@ public class MainUI extends JFrame {
 		
 		this.setVisible(true);
 	}
+	
+	/**
+	 * 菜单--点击响应
+	 * @author ljheee
+	 *
+	 */
+	class MenuHandler implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			if(e.getSource() == exitH){
+				System.exit(0);
+			}else if(e.getSource() == newFile){
+				
+			}else if(e.getSource() == openFile){
+				
+			}else if(e.getSource() == saveFile){
+				
+			}else if(e.getSource() == newFile){
+				
+			}else if(e.getSource() == undoItem){
+				
+			}else if(e.getSource() == copyItem){
+				
+			}else if(e.getSource() == cutItem){
+				
+			}else if(e.getSource() == pasteItem){
+				
+			}else if(e.getSource() == aboutItem){
+				new About(MainUI.this,"关于",true);
+			}
+		}
+	}
+	
 	
 	/**
 	 * 鼠标监听
@@ -510,6 +561,7 @@ public class MainUI extends JFrame {
 				if(step == 1&&curve==null){
 					curve = new Curve(curveX0, curveY0, xEnd, yEnd, commandColor);
 					curve.cubicCurve2D.setCurve(curveX0, curveY0, curveX0, curveY0, xEnd, yEnd, xEnd, yEnd);
+					curve.draw(g);
 				} else if(step == 2){
 					curve.cubicCurve2D.setCurve(curveX0, curveY0, xEnd, yEnd, xEnd, yEnd, curveXEnd, curveYEnd);
 				} else if(step == 3){
