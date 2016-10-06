@@ -76,6 +76,7 @@ public class MainUI extends JFrame {
 	int curveX0,curveY0,curveXEnd,curveYEnd;
 	int cx1,cy1,cx2,cy2;
 	
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd  hh:mm:ss");
 	MenuHandler menuHandler = new MenuHandler();
 	
 	public MainUI() {
@@ -290,7 +291,7 @@ public class MainUI extends JFrame {
 		JSeparator jsSeparator = new JSeparator(SwingConstants.VERTICAL);
 		bottomToolBar.add(jsSeparator);// 添加分隔符
 
-		leftInfo.setPreferredSize(new Dimension(200, 20));
+		leftInfo.setPreferredSize(new Dimension(400, 20));
 		leftInfo.setHorizontalTextPosition(SwingConstants.LEFT);
 
 		bottomToolBar.add(pathInfo);
@@ -344,7 +345,7 @@ public class MainUI extends JFrame {
 						JOptionPane.showMessageDialog(null, even.toString(),"保存Error", JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				
+				leftInfo.setText(drawPanel.filename+" 已保存"+sdf.format(new Date()));
 				
 			}else if(e.getSource() == otherSave){//另存
 				save();
@@ -360,6 +361,7 @@ public class MainUI extends JFrame {
 					    graphics.dispose(); 
 					    
 						ImageIO.write(image, fileType, new File(drawPanel.filename));
+						leftInfo.setText(drawPanel.filename+" 已另存"+sdf.format(new Date()));
 					}
 					
 				}catch(IOException e1) {
@@ -399,6 +401,7 @@ public class MainUI extends JFrame {
 			
 //			drawPanel.add(new JLabel(icon));
 			repaint();
+			leftInfo.setText(fileDialog.getFile()+" 已打开"+sdf.format(new Date()));
 		}
 
 		private void save() {
@@ -416,6 +419,7 @@ public class MainUI extends JFrame {
 			shapelist.clearAll();
 			drawPanel.img = null;
 			drawPanel.repaint();
+			leftInfo.setText("新建"+sdf.format(new Date()));
 		}
 		
 	}
