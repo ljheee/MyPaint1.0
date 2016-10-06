@@ -18,5 +18,10 @@ public class ShapeList {
 	public int size(){
 		return list.size();
 	}
+	
+	public void clearAll(){
+		list.clear();
+		return;
+	}
 
 }

@@ -3,7 +3,9 @@ package com.ljheee.paint.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -12,11 +14,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import javax.imageio.ImageIO;
 import javax.swing.*;
-
 import com.ljheee.paint.component.DrawPanel;
 import com.ljheee.paint.shape.AirBrush;
 import com.ljheee.paint.shape.Curve;
@@ -43,7 +46,7 @@ public class MainUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private JMenuItem newFile,openFile,saveFile, exitH,aboutItem;
+	private JMenuItem newFile,openFile,saveFile,otherSave, exitH,aboutItem;
 	private JMenuItem undoItem,copyItem,cutItem, pasteItem;
 
 	private ButtonGroup buttongroup = new ButtonGroup();
@@ -55,7 +58,7 @@ public class MainUI extends JFrame {
 	private JLabel pathInfo = new JLabel("  ");
 	private JLabel timeInfo = new JLabel("  ");
 	
-	private JPanel drawPanel = null;//中间的画板
+	private DrawPanel drawPanel = null;//中间的画板
 	
 	Graphics2D g = null;
 	int x0=0,y0=0,xEnd=0,yEnd=0;
@@ -76,7 +79,7 @@ public class MainUI extends JFrame {
 	MenuHandler menuHandler = new MenuHandler();
 	
 	public MainUI() {
-		super();
+		super("PaintingTool");
 		this.setSize(900, 700);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
@@ -103,12 +106,19 @@ public class MainUI extends JFrame {
 		newFile = new JMenuItem("新建");// 文件菜单 项
 		openFile = new JMenuItem("打开");
 		saveFile = new JMenuItem("保存");
+		otherSave = new JMenuItem("另存为");
 		exitH = new JMenuItem("退出");
 		
 		fileMenu.add(newFile);// 文件菜单 --添加菜单项
 		fileMenu.add(openFile);
 		fileMenu.add(saveFile);
+		fileMenu.add(otherSave);
 		fileMenu.add(exitH);
+		newFile.addActionListener(menuHandler);
+		openFile.addActionListener(menuHandler);
+		saveFile.addActionListener(menuHandler);
+		otherSave.addActionListener(menuHandler);
+		exitH.addActionListener(menuHandler);
 		
 		
 		undoItem = new JMenuItem("撤销");//编辑-菜单
@@ -311,13 +321,56 @@ public class MainUI extends JFrame {
 			if(e.getSource() == exitH){
 				System.exit(0);
 			}else if(e.getSource() == newFile){
-				
+				newFile();
 			}else if(e.getSource() == openFile){
+				openFile();
+			}else if(e.getSource() == saveFile){//保存
+				if(drawPanel.filename==null){
+					save();
+				}else{
+					try{
+						int dotpos = drawPanel.filename.lastIndexOf('.');
+						String fileType = drawPanel.filename.substring(dotpos + 1);//截取后缀名
+						
+						Dimension imageSize = drawPanel.getSize();  
+					    BufferedImage image = new BufferedImage(imageSize.width,imageSize.height, BufferedImage.TYPE_INT_ARGB);  
+					    Graphics2D graphics = image.createGraphics();  
+					    drawPanel.paint(graphics);  
+					    graphics.dispose(); 
+						
+						ImageIO.write(image, fileType, new File(drawPanel.filename));
+					}
+					catch(IOException even) {
+						JOptionPane.showMessageDialog(null, even.toString(),"保存Error", JOptionPane.ERROR_MESSAGE);
+					}
+				}
 				
-			}else if(e.getSource() == saveFile){
 				
-			}else if(e.getSource() == newFile){
+			}else if(e.getSource() == otherSave){//另存
+				save();
+				try{
+					if(drawPanel.filename!=null){
+						int dotpos = drawPanel.filename.lastIndexOf('.');
+						String fileType = drawPanel.filename.substring(dotpos + 1);//截取后缀名
+						
+						Dimension imageSize = drawPanel.getSize();  
+					    BufferedImage image = new BufferedImage(imageSize.width,imageSize.height, BufferedImage.TYPE_INT_ARGB);  
+					    Graphics2D graphics = image.createGraphics();  
+					    drawPanel.paint(graphics);  
+					    graphics.dispose(); 
+					    
+						ImageIO.write(image, fileType, new File(drawPanel.filename));
+					}
+					
+				}catch(IOException e1) {
+					JOptionPane.showMessageDialog(null, e1.toString(),"保存Error", JOptionPane.ERROR_MESSAGE);
+				}
 				
+			}else if(e.getSource() == exitH){
+				if(JOptionPane.showConfirmDialog(MainUI.this, "是否要保存画图板","画图板",JOptionPane.YES_NO_OPTION)==0){
+					save();
+				}
+				System.exit(0);
 			}else if(e.getSource() == undoItem){
 				
 			}else if(e.getSource() == copyItem){
@@ -330,6 +383,41 @@ public class MainUI extends JFrame {
 				new About(MainUI.this,"关于",true);
 			}
 		}
+
+		private void openFile() {
+			FileDialog fileDialog = new FileDialog( MainUI.this , "选择一个文件", FileDialog.LOAD );
+			fileDialog.show();
+			if(fileDialog.getFile()==null) return;
+			
+			Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+			//要读取的图片
+			ImageIcon icon = new ImageIcon(fileDialog.getDirectory()+fileDialog.getFile());
+			
+			newFile();
+			drawPanel.img = icon.getImage();
+			g2d.drawImage(icon.getImage(), 0, 0, drawPanel);
+			
+//			drawPanel.add(new JLabel(icon));
+			repaint();
+		}
+
+		private void save() {
+			FileDialog fileDialog = new FileDialog( MainUI.this, "请指定一个文件名", FileDialog.SAVE );
+			fileDialog.show();
+			if(fileDialog.getFile()==null) return;
+			drawPanel.filename = fileDialog.getDirectory()+fileDialog.getFile();
+		}
+		
+		
+		
+
+		//新建
+		private void newFile() {
+			shapelist.clearAll();
+			drawPanel.img = null;
+			drawPanel.repaint();
+		}
+		
 	}
 	
 	
